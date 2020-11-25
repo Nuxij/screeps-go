@@ -2,3 +2,6 @@ package-lock.json
 .screeps.json
 node_modules
 dist
+**/vendor
+**/wasm-go
+src-old

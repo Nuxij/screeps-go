@@ -1,13 +1,19 @@
 {
-  "name": "screeps-code",
+  "name": "screeps-go",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "watch": "nodemon -w src --exec grunt"
+    "build": "yarn transpile && grunt",
+    "transpile": "gopherjs build ./src/gopher/src/ -m -o dist/scrog.js && babel-minify dist -d dist",
+    "watch": "nodemon -w src -e .go --exec yarn build",
+    "watch-build": "nodemon -w src -e .go --exec yarn transpile",
+    "build-wasm": "cd src && tinygo build -o screeps.wasm -target wasm -gc=none -no-debug ./main.go"
   },
   "dependencies": {
+    "babel-minify": "^0.5.1",
     "grunt": "^1.3.0",
+    "grunt-contrib-copy": "^1.0.0",
     "grunt-screeps": "^1.4.0",
     "nodemon": "^2.0.6"
   },

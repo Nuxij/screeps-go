@@ -1,0 +1,8 @@
+package game
+
+import "github.com/gopherjs/gopherjs/js"
+
+type Owner struct {
+	*js.Object
+	Username string `js:username`
+}
