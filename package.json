@@ -4,10 +4,15 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "build": "yarn transpile && grunt",
-    "transpile": "gopherjs build ./src/gopher/src/ -m -o dist/scrog.js && babel-minify dist -d dist",
-    "watch": "nodemon -w src -e .go --exec yarn build",
-    "watch-build": "nodemon -w src -e .go --exec yarn transpile",
+    "clean": "grunt clean",
+    "build": "yarn clean && yarn transpile && grunt",
+
+    "watch": "nodemon -w src -e .js,.go --exec yarn build",
+    "watch-build": "nodemon -w src -e .js,.go --exec yarn transpile",
+
+    "grunt": "powershell 'cp src/main.js build/dist/main.js' && grunt",
+    "transpile": "gopherjs build ./src -m -o build/gopher/screeps.js && babel-minify build/gopher -d build/dist",
+    
     "build-wasm": "cd src && tinygo build -o screeps.wasm -target wasm -gc=none -no-debug ./main.go"
   },
   "dependencies": {
@@ -22,6 +27,7 @@
     "@babel/core": "^7.12.3",
     "@babel/plugin-proposal-class-properties": "^7.12.1",
     "@babel/preset-env": "^7.12.1",
+    "babel-minify": "*",
     "grunt-babel": "^8.0.0",
     "grunt-contrib-clean": "^2.0.0"
   }

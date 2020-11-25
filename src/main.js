@@ -2,7 +2,7 @@
 console.log('Starting');
 
 console.log('Loading main.js');
-require('./scrog');
+require('./screeps');
 
 const wasmTick = true
 

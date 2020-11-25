@@ -5,3 +5,5 @@ dist
 **/vendor
 **/wasm-go
 src-old
+build
+pkg
