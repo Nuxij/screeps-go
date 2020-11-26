@@ -144,10 +144,22 @@ func StoreEnergy(r *room.Room, max int) {
 }
 
 func IncreaseLevel(r *room.Room) error {
-	c := r.Controller
-	energyToNextLevel := c.ProgressTotal - c.Progress
-	if r.EnergyAvailable > energyToNextLevel {
-		StoreEnergy(r, 1000)
+	upgradePlan := RoomUpgradePlan{
+		Room:      r.Name(),
+		TargetGCL: 5,
 	}
-	return nil
+
+	scheduler := &Scheduler{}
+
+	if err := scheduler.Execute(nil, &upgradePlan); err != nil {
+		println(err.Error())
+		return
+	}
+
+	// c := r.Controller
+	// energyToNextLevel := c.ProgressTotal - c.Progress
+	// if r.EnergyAvailable > energyToNextLevel {
+	// 	StoreEnergy(r, 1000)
+	// }
+	// return nil
 }

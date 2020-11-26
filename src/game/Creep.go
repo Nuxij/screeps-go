@@ -1,6 +1,7 @@
 package game
 
 import (
+	"consts"
 	"game/memory"
 	"room"
 )
@@ -20,4 +21,8 @@ type Creep struct {
 	Spawning bool   `js:"spawning"`
 	//Store store @todo
 	TicksToLive int `js:"ticksToLive"`
+}
+
+func (c *Creep) Harvest(target string) consts.ERR {
+	return consts.ERR(c.Call("harvest", target).Int())
 }
