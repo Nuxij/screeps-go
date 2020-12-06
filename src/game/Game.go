@@ -1,6 +1,7 @@
 package game
 
 import (
+	"creep"
 	"room"
 	"structure"
 
@@ -12,7 +13,7 @@ type Game struct {
 	Rooms             map[string]*room.Room        `js:"rooms"`
 	ConstructionSites map[string]*ConstructionSite `js:"constructionSites"`
 	Time              int                          `js:"time"`
-	Creeps            map[string]*Creep            `js:"creeps"`
+	Creeps            map[string]*creep.Creep      `js:"creeps"`
 	Spawns            map[string]*structure.Spawn  `js:"spawns"`
 }
 

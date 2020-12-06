@@ -11,10 +11,17 @@ type Room struct {
 	EnergyAvailable int         `js:"energyAvailable"`
 }
 
-// func Form(id string) Room {
-// 	room := Room{}
-// 	room.Game = js.Global.Get("Game")
-// 	room.Obj = room.Game.Get("rooms").Get(id)
-// 	room.Name = room.Obj.Get("name").String()
-// 	return room
+func Form(id string) *Room {
+	g := js.Global.Get("Game")
+	r := g.Get("rooms").Get(id)
+	if r == nil {
+		return nil
+	}
+	return &Room{Object: r}
+}
+
+// type RoomWatch struct {
+// 	*js.Object
+// 	Processed []string `js:processed`
+// 	Busy      []string `js:busy`
 // }

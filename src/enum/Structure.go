@@ -1,4 +1,4 @@
-package consts
+package enum
 
 const (
 	STRUCTURE_SPAWN        = "spawn"

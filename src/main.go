@@ -2,40 +2,45 @@ package main
 
 import (
 	"game"
-	"game/memory"
+	"logic"
+	"memory"
+	"pcontext"
 
 	"github.com/gopherjs/gopherjs/js"
 )
 
-var G *game.Game
-
 func main() {
-	// G = game.Form()
-
 	println("You!")
 	js.Global.Set("go", map[string]interface{}{
 		"loop": looper,
 	})
 }
 
-// type RoomWatch struct {
-// 	*js.Object
-// 	Processed []string `js:processed`
-// 	Busy      []string `js:busy`
-// }
-
 func looper() {
-	RawMemory := &memory.Memory{}
-	RawMemory.Load()
-	// fsm := js.Global.Get("FSM")
-	// fsm.Call("run")
-	lowlevel := CollectRoomsBelowLevel(5)
-	for _, k := range lowlevel {
-		println("BOOTING ROOM", k.Name)
-		IncreaseLevel(k)
+	rawMem, err := memory.Get()
+	if err != nil {
+		println("Fucked it memory")
+		return
+	}
+	rawMem.Load()
+	if rawMem.Options.DisableTick {
+		return
+	}
+
+	pc := &pcontext.GamePointers{
+		Game:   game.Form(),
+		Memory: rawMem,
+	}
+
+	logic.RecordPreExistingCreeps(pc)
+
+	for _, k := range logic.CollectRoomsBelowLevel(5) {
+		println("Bringing Room to GCL 5: " + k.Name)
+		logic.IncreaseLevel(pc, k)
 	}
 
 	PrintStats()
+	rawMem.Save()
 }
 
 func PrintStats() {

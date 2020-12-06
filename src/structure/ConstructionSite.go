@@ -4,11 +4,11 @@ import (
 	"room"
 )
 
-type Structure struct {
+type ConstructionSite struct {
 	*room.RoomObject
 
-	Hits          int    `js:"hits"`
-	HitsMax       int    `js:"hitsMax"`
+	Progress      int    `js:"progress"`
+	ProgressTotal int    `js:"progressTotal"`
 	ID            string `js:"id"`
 	StructureType string `js:"structureType"` // @todo could be constant
 	// Effects       []*Effect `js:"effects"`

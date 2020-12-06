@@ -7,15 +7,24 @@ import (
 	"github.com/gopherjs/gopherjs/js"
 )
 
+type StringKey string
+
+var CTXMemory = StringKey("memory")
+
 type Memory struct {
-	Rooms  map[string]*RoomMemory
-	Creeps map[string]*CreepMemory
-	Spawns map[string]*StructureMemory
+	JUNK    string
+	Options *OptionsMemory
+	Rooms   map[string]*RoomMemory
+	Creeps  map[string]*CreepMemory
+}
+
+type OptionsMemory struct {
+	DisableTick bool
 }
 
 type RoomMemory struct {
 	Creeps []string
-	Tasks  map[string]*Task
+	Tasks  []string
 }
 
 type Task struct {
@@ -27,17 +36,16 @@ type CreepMemory struct {
 	TaskQ []string
 }
 
-type StructureMemory struct {
-}
-
 func Get() (*Memory, error) {
 	m := &Memory{
+		JUNK: "just junk",
+		Options: &OptionsMemory{
+			DisableTick: false,
+		},
 		Rooms:  map[string]*RoomMemory{},
 		Creeps: map[string]*CreepMemory{},
-		Spawns: map[string]*StructureMemory{},
 	}
-	err := m.Load()
-	return m, err
+	return m, nil
 }
 
 func (m *Memory) Load() error {

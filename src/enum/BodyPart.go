@@ -1,6 +1,4 @@
-package consts
-
-type BodyPart string
+package enum
 
 const (
 	MOVE          = "move"

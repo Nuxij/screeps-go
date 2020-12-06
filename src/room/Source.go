@@ -1,11 +1,7 @@
-package game
-
-import (
-	"room"
-)
+package room
 
 type Source struct {
-	*room.RoomObject
+	*RoomObject
 	Energy              int    `js:"energy"`
 	EnergyCapacity      int    `js:"energyCapacity"`
 	ID                  string `js:"id"`

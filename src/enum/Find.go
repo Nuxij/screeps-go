@@ -1,4 +1,4 @@
-package consts
+package enum
 
 type FIND int
 

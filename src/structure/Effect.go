@@ -1,4 +1,4 @@
-package game
+package structure
 
 import "github.com/gopherjs/gopherjs/js"
 

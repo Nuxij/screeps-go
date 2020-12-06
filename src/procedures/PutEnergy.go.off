@@ -1,0 +1,105 @@
+package procedures
+
+import (
+	"creep"
+	"enum"
+	"game"
+	"memory"
+	"pcontext"
+	"room"
+	"strconv"
+
+	"github.com/pkg/errors"
+)
+
+type PutEnergy struct {
+	Amount int
+	Room   *room.Room
+	Target *room.RoomObject
+}
+
+func (s PutEnergy) Name() string {
+	return "put-energy-" + s.Target.Pos.String() + "-" + strconv.Itoa(s.Amount)
+}
+
+func (s PutEnergy) Do(pc *pcontext.GamePointers) ([]Procedure, error) {
+	steps := []Procedure{}
+
+	sources := Sources(roomForUpgrade)
+	for _, source := range sources {
+		steps = append(steps, procedures.GetEnergy{
+			Amount: s.Amount / len(sources),
+			Source: source,
+			Room:   roomForUpgrade,
+		})
+	}
+
+	creep, creepMemory := s.GetCreepForTask(pc, s.Room.Name)
+
+	if creep == nil && creepMemory == nil {
+		step, err := SpawnNamedCreep(s.Room, &memory.CreepMemory{
+			Task: s.Name(),
+		})
+		if err != nil {
+			return steps, errors.New("Can't put energy with no creeps")
+		}
+		steps = append(steps, step)
+		return steps, nil
+	}
+
+	store := creep.Get("store")
+	if store.Get("energy").Int() < store.Call("getCapacity").Int() {
+
+		err := s.Harvest(creep)
+		if err != nil {
+			return steps, err
+		}
+	} else {
+
+	}
+
+	return steps, nil
+}
+
+func (s PutEnergy) GetCreepForTask(pc *pcontext.GamePointers, roomName string) (*creep.Creep, *memory.CreepMemory) {
+	var ourGuy *creep.Creep
+	var ourMemory *memory.CreepMemory
+
+	creeps := game.FindCreepsInRoom(roomName)
+
+	for _, c := range creeps {
+		cmem, ok := pc.Memory.Creeps[c.Name]
+		if !ok {
+			return nil, nil
+		}
+
+		if cmem.Task == "" || cmem.Task == "none" {
+			cmem.Task = s.Name()
+		}
+
+		if cmem.Task == s.Name() {
+			ourGuy = c
+			ourMemory = cmem
+			break
+		}
+	}
+	return ourGuy, ourMemory
+}
+
+func (s PutEnergy) Harvest(creep *creep.Creep) error {
+	tryHarvest := enum.Errors.Name(creep.HarvestSource(s.Source))
+	switch tryHarvest {
+	case "ERR_OK":
+		println("Harvested Successfully!")
+		return nil
+	case "ERR_NO_BODYPART":
+		return errors.New("Needs more CARRY")
+	case "ERR_NOT_IN_RANGE":
+		creep.MoveTo(s.Source.RoomObject.Pos)
+		return nil
+	case "ERR_INVALID_TARGET":
+		return errors.New("Get-Energy given a bad source " + s.Source.ID)
+	default:
+		return errors.New("[Harvest:" + s.Source.ID + "] FAILED! " + tryHarvest)
+	}
+}
