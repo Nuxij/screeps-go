@@ -1,138 +1,68 @@
 package utils
 
-import (
-	"errors"
-
-	"github.com/gopherjs/gopherjs/js"
-)
-
-type FSMHandler interface {
-	Transition()
+// State is a basic struct that implements the State interface.
+type State struct {
+	Enter  func()
+	Update func()
+	Exit   func()
 }
 
-type FSMHandlerFunc func(FSMHandlerFunc) FSMHandlerFunc
-
-// func (def *FSMDefinition) Transition(name string) {
-//   for from, to := range def.Transitions {
-//     if
-//   }
-// }
-
+// FSM represents a Finite State Machine, which can have one State active at a time.
 type FSM struct {
-	state string
-
-	InitialState string
-	States       map[string]map[string]FSMHandlerFunc
+	State          string
+	StateDirectory map[string]State
 }
 
-func (fsm *FSM) New(handler *FSMHandler, currentState string) {
-	// fsm.handler = handler
-	// state = currentState
+// NewFSM creates a new FSM and returns it.
+func NewFSM() *FSM {
+	fsm := &FSM{}
+	fsm.StateDirectory = make(map[string]State, 0)
+	return fsm
 }
 
-func (fsm *FSM) Transition(name string) {
-	// const spec = this.transitions().find(t => t.name == transition)
-	// if(!spec)
-	//   throw new Error(`Cannot use transition '${transition}' from state '${this.state}'.`)
-
-	// const to = this._states.find(s => s.name == spec.to)
-	// const from = this._states.find(s => s.name == spec.from)
-
-	// this.trigger("Before", spec)
-	// this.trigger("Leave", from)
-
-	// this.state = spec.to
-
-	// this.trigger("Enter", to)
-	// this.trigger("After", spec)
-
+// Update runs the Update() on the active State.
+func (f *FSM) Update() {
+	if f.State != "" && f.StateDirectory[f.State].Update != nil {
+		f.StateDirectory[f.State].Update()
+	} else {
+		println("Update() called on FSM without active state.")
+	}
 }
 
-func (fsm *FSM) Run() error {
-	if js.Global.Get("Memory").Get("forceResetFSM").Bool() == true {
-		fsm.state = fsm.InitialState
+// Register registers a State with its name.
+func (f *FSM) Register(name string, state State) {
+	f.StateDirectory[name] = state
+}
+
+// Unregister removes a State from the FSM using its name.
+func (f *FSM) Unregister(name string) {
+	delete(f.StateDirectory, name)
+}
+
+// HasState returns if the FSM has a State associated with the name in its directory.
+func (f *FSM) HasState(name string) bool {
+	_, hasKey := f.StateDirectory[name]
+	return hasKey
+}
+
+// Change allows you to change the current, "main" State assigned to the FSM. If you run Change(), it will call
+// Exit() on the previous State and Enter() on the next State.
+func (f *FSM) Change(stateName string) {
+
+	if f.State != "" && f.StateDirectory[f.State].Exit != nil {
+		f.StateDirectory[f.State].Exit()
 	}
 
-	_, ok := fsm.States[fsm.state]
-	if !ok {
-		return errors.New("Cannot find state in computed states list.")
+	_, hasKey := f.StateDirectory[stateName]
+	if !hasKey {
+		println("FSM object", f, "has no state", stateName)
+		panic("Error!")
 	}
 
-	// fsm.Transition("", transitionSpec)
-	return nil
+	f.State = stateName
 
-	// if(typeof this.onAny == "function") {}
-	// 	return this.onAny.call(this.handler, this)
-	// }
+	if f.State != "" && f.StateDirectory[f.State].Enter != nil {
+		f.StateDirectory[f.State].Enter()
+	}
+
 }
-
-//       if(this.state !== undefined)
-//         this.state = state
-//       this.state = this.machine.init
-
-//       this._states = []
-//       this._transitions = this.machine.transitions
-
-//       this._transitions.forEach(t => {
-//         if(!t.camelName)
-//           t.camelName = t.name.substr(0, 1).toUpperCase() + t.name.substr(1)
-
-//         this[t.name] = () => this.transition(t.name)
-//         if(!this._states.find(s => s.name == t.to))
-//           this._states.push({ name: t.to })
-//         if(!this._states.find(s => s.name == t.from))
-//           this._states.push({ name: t.from })
-//       })
-
-//       this._states.forEach(s => {
-//         s.camelName = s.name.substr(0, 1).toUpperCase() + s.name.substr(1)
-//       })
-//     }
-
-//     run() {
-//       if(Memory.forceResetFSM == true)
-//         this.state = this.machine.init
-
-//       const spec = fsm.States.find(s => s.name == this.state)
-//       if(!spec)
-//         throw new Error(`Cannot find state '${this.state}' in computed states list.`)
-
-//       this.trigger("", spec)
-
-//       if(typeof this.onAny == "function")
-//         return this.onAny.call(this.handler, this)
-//     }
-
-//     transition(transition) {
-
-//     }
-
-//     is(state) {
-//       return this.state == state
-//     }
-
-//     can(state) {
-//       return this.transitions().indexOf(state) !== -1
-//     }
-
-//     cannot(state) {
-//       return !this.can(state)
-//     }
-
-//     transitions() {
-//       return this._transitions.filter(t => t.from == this.state || t.from == "any")
-//     }
-
-//     allTransitions() {
-//       return this._transitions
-//     }
-
-//     allStates() {
-//       return this._states
-//     }
-
-//     trigger(eventName, spec) {
-//       if(typeof this[`on${eventName}${spec.camelName}`] == "function")
-//         return this[`on${eventName}${spec.camelName}`].call(this.handler, this)
-//     }
-// }

@@ -32,6 +32,7 @@ type Task struct {
 }
 
 type CreepMemory struct {
+	State string
 	Task  string
 	TaskQ []string
 }

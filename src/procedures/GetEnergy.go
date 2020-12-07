@@ -30,7 +30,8 @@ func (s GetEnergy) Do(pc *pcontext.GamePointers) ([]Procedure, error) {
 
 	if creep == nil && creepMemory == nil {
 		step, err := SpawnNamedCreep(s.Room, &memory.CreepMemory{
-			Task: s.Name(),
+			Task:  s.Name(),
+			State: "waiting",
 		})
 		if err != nil {
 			return steps, errors.New("Can't get energy with no creeps")
@@ -39,33 +40,76 @@ func (s GetEnergy) Do(pc *pcontext.GamePointers) ([]Procedure, error) {
 		return steps, nil
 	}
 
-	// OK! NOW ITS TIME FOR AN FSM!
-	store := creep.Get("store")
-	if store.Get("energy").Int() != store.Call("getCapacity").Int() {
+	cc := pc.Memory.Creeps[creep.Name]
+
+	// if not near the source, set travellingToSource
+	// when reach source, set harvesting
+	// when energy is full, set travellingToDeposit
+	// when near desposit, set depositing
+
+	// when idle, find source and transition
+	// when harvesting, harvest source until energy full, transition
+	// when lookingForDeposit, check current pos for a container, if container found, transition to depositing
+	// if no container found, transition to lookingForConstructionSite
+	// if constructionSite found, build, if not make one, transition to building
+	// if energy becomes 0, transition to idle
+
+	// Set this straight away as Source is filled in
+	if cc.State == "waiting" {
+		cc.State = "harvesting"
+	}
+
+	if cc.State == "harvesting" {
+		store := creep.Get("store")
+		if store.Get("energy").Int() == store.Call("getCapacity").Int() {
+			cc.State = "lookingForDeposit"
+		}
 		err := s.Harvest(creep)
 		if err != nil {
-			return steps, err
+			println(err)
+			// 	return steps, err
 		}
-	} else {
+	}
+
+	if cc.State == "lookingForDeposit" {
 		containers := creep.Pos.Call("findInRange", enum.FIND_MY_STRUCTURES, 0)
-		if containers.Get("length").Int() == 0 {
-			sites := creep.Pos.Call("findInRange", enum.FIND_CONSTRUCTION_SITES, 0)
-			if sites.Get("length").Int() == 0 {
-				println(enum.Errors.Name(creep.Pos.Call("createConstructionSite", "container").Int()))
-			} else {
-				site := &structure.ConstructionSite{
-					RoomObject: &room.RoomObject{
-						Object: sites.Get("0"),
-					},
-				}
+		if containers.Get("length").Int() == 1 {
+			cc.State = "depositing"
+		} else {
+			cc.State = "buildingDeposit"
+		}
+	}
+
+	if cc.State == "buildingDeposit" {
+		sites := creep.Pos.Call("findInRange", enum.FIND_CONSTRUCTION_SITES, 0)
+		if sites.Get("length").Int() == 0 {
+			println(enum.Errors.Name(creep.Pos.Call("createConstructionSite", "container").Int()))
+		} else {
+			site := &structure.ConstructionSite{
+				RoomObject: &room.RoomObject{
+					Object: sites.Get("0"),
+				},
+			}
+			if site.Progress < site.ProgressTotal {
 				println(site.Progress)
 				creep.Call("build", sites.Get("0"))
+			} else {
+				cc.State = "depositing"
 			}
+			store := creep.Get("store")
+			if store.Get("energy").Int() == 0 {
+				cc.State = "waiting"
+			}
+		}
+	}
+
+	if cc.State == "depositing" {
+		store := creep.Get("store")
+		if store.Get("energy").Int() == 0 {
+			cc.State = "waiting"
 		} else {
 			creep.Call("drop", "energy")
 		}
-		// Make a container if there isn't one
-		// Drop the shit on the floor
 	}
 
 	return steps, nil

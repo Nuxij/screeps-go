@@ -16,7 +16,8 @@ func RecordPreExistingCreeps(pc *pcontext.GamePointers) {
 		_, ok := pc.Memory.Creeps[c.Name]
 		if !ok {
 			pc.Memory.Creeps[c.Name] = &memory.CreepMemory{
-				Task: "none",
+				Task:  "none",
+				State: "waiting",
 			}
 		}
 	}

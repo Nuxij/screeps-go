@@ -11,12 +11,6 @@ import (
 
 func main() {
 	println("You!")
-	js.Global.Set("go", map[string]interface{}{
-		"loop": looper,
-	})
-}
-
-func looper() {
 	rawMem, err := memory.Get()
 	if err != nil {
 		println("Fucked it memory")
@@ -31,6 +25,14 @@ func looper() {
 		Game:   game.Form(),
 		Memory: rawMem,
 	}
+	js.Global.Set("go", map[string]interface{}{
+		"loop": func() {
+			looper(pc)
+		},
+	})
+}
+
+func looper(pc *pcontext.GamePointers) {
 
 	logic.RecordPreExistingCreeps(pc)
 
@@ -40,7 +42,7 @@ func looper() {
 	}
 
 	PrintStats()
-	rawMem.Save()
+	pc.Memory.Save()
 }
 
 func PrintStats() {
